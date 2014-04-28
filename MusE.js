@@ -584,7 +584,7 @@ MPitch = function(name)
     this.Type = "MPitch";
     this.GetValue = function()
     {
-        return this.Name.charCodeAt(0) - "A".charCodeAt(0) + this.Mod + 7 * (this.Octave + (this.Name.charCodeAt(0) < "C".charCodeAt(0) ? 1 : 0));
+        return this.Name.charCodeAt(0) - "A".charCodeAt(0) + 7 * (this.Octave + (this.Name.charCodeAt(0) < "C".charCodeAt(0) ? 1 : 0));
     };
 };
 
