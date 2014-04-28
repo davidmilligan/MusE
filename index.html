@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>MusE - A Musical Programming Language</title>
+    <script src="https://raw.githubusercontent.com/davidmilligan/MusE/master/MusE.js"></script>
+    <style>
+        #code{
+            width: 100%;
+            height: 200px;
+            font-family: monospace;
+        }
+        #stderr{
+            font-family: monospace;
+            color: red;
+        }
+        #music{
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div>
+        <textarea id="code"></textarea>
+        <button onclick="muse.parse(document.getElementById('code').value,document.getElementById('music'));">Go</button>
+        <div id="stderr"></div>
+    </div>
+    <div id="music">
+        
+    </div>
+</body>
+</html>
