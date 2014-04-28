@@ -23,7 +23,7 @@ muse =
     document: null,
     parse: function(text, outputElement, xscale, yscale, noteSpacing, staffSpacing)
     {
-        if(typeof(xscale)==='undefined') xscale = 10;
+        if(typeof(xscale)==='undefined') xscale = 15;
         if(typeof(yscale)==='undefined') yscale = 10;
         if(typeof(noteSpacing)==='undefined') noteSpacing = 20;
         if(typeof(staffSpacing)==='undefined') staffSpacing = 50;
@@ -409,7 +409,8 @@ MDocument = function(text)
                     }
                     staffY += staffSpacing * this.Staves[i].StaffSpacingCoefficient;
                 }
-                
+                x += xscale + noteSpacing;
+                //TODO: draw clef
             }
             minStep = Infinity;
             var staffY = y;
@@ -564,10 +565,12 @@ MNote = function(pitches, time)
     }
     this.Draw = function(xscale,yscale)
     {
+        this.SVG = "";
         for(var i in this.Pitches)
         {
-            yPosition = this.DrawY + yscale * (2 + this.Clef.Pitch.GetValue() - this.Pitches[i].GetValue());
-            
+            var yPosition = this.DrawY + yscale * (6 + this.Clef.Pitch.GetValue() - this.Pitches[i].GetValue()) / 2;
+            var up = this.Pitches[i].GetValue() > this.Clef.Pitch.GetValue();
+            this.SVG += this.Time.Draw(this.DrawX, yPosition, xscale, yscale, up);
         }
         return this.SVG;
     };
@@ -581,7 +584,7 @@ MPitch = function(name)
     this.Type = "MPitch";
     this.GetValue = function()
     {
-        return (this.Name.charCodeAt(0) - "A".charCodeAt(0) + this.Mod) * this.Octave;
+        return this.Name.charCodeAt(0) - "A".charCodeAt(0) + this.Mod + 7 * (this.Octave + (this.Name.charCodeAt(0) < "C".charCodeAt(0) ? 1 : 0));
     };
 };
 
@@ -589,6 +592,7 @@ MTime = function()
 {
     this.Values = new Array();
     this.Type = "MTime";
+    this.SVG = "";
     this.GetValue = function()
     {
         var total = 0;
@@ -597,6 +601,29 @@ MTime = function()
             total += 1.0/this.Values[i];
         }
         return total;
+    };
+    this.Draw = function(x,y,xscale,yscale,up)
+    {
+        this.SVG = "";
+        this.SVG += '<ellipse cx="' + x + '" cy="' + y + '" rx="' + (xscale/2) + '" ry="' + (yscale/2) + '" stroke-width="1" stroke="black" style="fill:' + (this.Values[0] >= 4?"black" : "transparent") + '" />\n';
+        if (this.Values[0] > 1)
+        {
+            var yFlag = y;
+            var xFlag = x;
+            if (up)
+            {
+                xFlag -= xscale/2;
+                yFlag += yscale * 4;
+            }
+            else
+            {
+                xFlag += xscale/2;
+                yFlag -= yscale * 4;
+            }
+            this.SVG += '<line x1="' + xFlag + '" y1="' + y + '" x2="' + xFlag + '" y2="' + yFlag + '" stroke-width="1" stroke="black" />\n';
+            
+        }
+        return this.SVG;
     };
 };
 
