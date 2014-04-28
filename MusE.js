@@ -580,7 +580,7 @@ MPitch = function(name)
     this.Type = "MPitch";
     this.GetValue = function()
     {
-        return (this.Name.charCodeAt(0) - "A".charCodeAt(0) + this.Mod) * octave;
+        return (this.Name.charCodeAt(0) - "A".charCodeAt(0) + this.Mod) * this.Octave;
     };
 };
 
