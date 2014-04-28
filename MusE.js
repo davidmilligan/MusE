@@ -21,18 +21,15 @@
 muse =
 {
     document: null,
-    parse: function(text, outputElement, xscale, yscale, noteSpacing, staffSpacing)
+    parse: function(text, outputElement, scale)
     {
-        if(typeof(xscale)==='undefined') xscale = 15;
-        if(typeof(yscale)==='undefined') yscale = 10;
-        if(typeof(noteSpacing)==='undefined') noteSpacing = 20;
-        if(typeof(staffSpacing)==='undefined') staffSpacing = 50;
+        if(typeof(scale)==='undefined') scale = 1;
         
         this.clearErrors();
         this.document = new MDocument(text);
         this.document.Parse();
         
-        outputElement.innerHTML = this.document.GenerateSVG(outputElement.offsetWidth, xscale, yscale, noteSpacing, staffSpacing);
+        outputElement.innerHTML = this.document.GenerateSVG(outputElement.offsetWidth, scale);
     },
     error: function(message)
     {
@@ -64,6 +61,15 @@ muse =
         clefs: new Array()
     }
 };
+
+//source/credits: https://github.com/ofa-/notes/tree/master/i
+var svgDrawings =
+{
+    TrebleClef: '<g transform="matrix(0.6,0,0,0.6,0,-30)"><path d="M 46.63,132.558 C 44.854,132.846 42.909,132.991 40.798,132.991 C 36.333,132.991 33.046,132.487 30.935,131.479 C 24.214,128.262 19.462,124.301 16.677,119.597 C 14.661,116.189 13.462,111.677 13.077,106.06 C 12.741,101.404 13.845,96.532 16.389,91.443 C 18.549,87.075 21.344,83.27 24.776,80.03 C 28.208,76.79 32.085,73.538 36.405,70.273 C 36.165,69.073 35.829,66.697 35.397,63.144 C 35.157,59.832 35.038,57.551 35.038,56.303 C 35.038,52.847 35.325,49.559 35.901,46.438 C 36.477,43.606 37.94,40.294 40.293,36.501 C 42.885,32.325 45.141,30.213 47.062,30.164 C 48.646,30.164 50.41,32.541 52.354,37.293 C 54.297,42.046 55.318,46.127 55.414,49.535 C 55.51,54.048 55.054,57.936 54.046,61.201 C 53.374,63.361 52.126,66.05 50.302,69.265 C 49.534,70.562 47.95,72.698 45.55,75.674 C 44.878,76.539 43.989,77.427 42.886,78.339 C 41.926,79.06 40.99,79.804 40.078,80.571 L 42.454,94.541 C 43.078,94.445 43.774,94.397 44.542,94.397 C 48.91,94.397 52.294,95.286 54.694,97.061 C 59.206,100.373 61.677,105.102 62.11,111.247 C 62.446,115.519 61.486,119.479 59.23,123.128 C 56.781,127.112 53.181,130.089 48.429,132.058 C 49.052,136.426 49.676,140.603 50.301,144.587 C 50.637,146.986 50.805,149.026 50.805,150.707 C 50.805,153.011 50.445,154.835 49.725,156.18 C 47.084,161.124 43.077,163.765 37.703,164.101 C 34.486,164.292 31.342,163.621 28.269,162.084 C 24.429,160.211 22.414,157.498 22.222,153.945 C 22.031,151.351 22.534,149.142 23.734,147.318 C 25.078,145.157 27.07,144.005 29.711,143.861 C 31.535,143.716 33.262,144.304 34.895,145.626 C 36.528,146.945 37.415,148.589 37.559,150.557 C 37.895,154.877 35.231,157.829 29.567,159.413 C 30.864,161.284 33.456,162.221 37.344,162.221 C 39.406,162.221 41.422,161.597 43.391,160.349 C 45.359,159.101 46.87,157.54 47.927,155.669 C 48.599,154.421 48.935,152.524 48.935,149.981 C 48.935,148.445 48.815,146.717 48.575,144.797 C 47.901,140.718 47.253,136.638 46.63,132.558 z M 42.094,104.622 C 38.589,104.718 35.948,105.942 34.173,108.294 C 32.829,110.118 32.23,112.158 32.374,114.414 C 32.421,116.094 33.034,117.81 34.21,119.562 C 35.386,121.314 36.669,122.549 38.062,123.27 C 37.822,123.414 37.582,123.677 37.343,124.062 C 34.558,122.718 32.517,121.158 31.222,119.382 C 29.302,116.789 28.222,113.909 27.982,110.741 C 27.837,108.63 28.318,106.422 29.423,104.117 C 30.622,101.621 32.374,99.485 34.677,97.709 C 36.406,96.365 38.373,95.43 40.581,94.901 L 38.421,81.869 C 36.79,82.83 34.439,84.702 31.366,87.485 C 27.573,90.893 24.813,93.941 23.087,96.629 C 19.341,102.438 17.638,107.453 17.974,111.677 C 18.359,116.909 20.734,121.409 25.103,125.178 C 29.47,128.945 34.607,130.829 40.51,130.829 C 42.43,130.829 44.35,130.612 46.27,130.181 C 44.829,121.638 43.438,113.118 42.094,104.622 z M 48.141,41.334 C 45.117,41.334 42.62,43.662 40.653,48.318 C 38.781,52.638 37.845,57.654 37.845,63.365 C 37.845,65.238 37.965,67.038 38.205,68.765 C 41.996,65.789 45.212,62.526 47.852,58.973 C 51.164,54.557 52.701,50.742 52.46,47.526 C 52.173,43.351 50.732,41.286 48.141,41.334 z M 43.965,104.479 L 47.997,129.607 C 54.093,127.543 56.877,122.815 56.35,115.423 C 55.773,107.79 51.645,104.143 43.965,104.479 z"/></g>\n',
+    BassClef: '<g transform="matrix(0.6,0,0,0.6,0,-30)"><path d="M 51.936,96.822 C 50.448,99.557 48.576,102.245 46.32,104.885 C 44.064,107.525 41.664,109.756 39.12,111.58 C 36.192,113.74 32.568,115.636 28.248,117.268 C 25.56,118.276 21.696,119.236 16.656,120.148 L 16.152,119.068 C 18.599,118.252 20.88,117.364 22.992,116.404 C 28.032,114.148 31.8,111.7 34.296,109.061 C 42.359,100.661 46.272,90.461 46.032,78.463 C 45.983,74.432 45.288,70.999 43.944,68.167 C 42.024,64.088 39.072,62.048 35.088,62.048 C 32.256,62.048 29.544,63.032 26.952,65 C 24.12,67.112 22.824,69.464 23.064,72.056 C 23.112,72.201 23.208,72.272 23.352,72.272 C 25.992,71.6 27.936,71.289 29.184,71.336 C 30.864,71.385 32.255,72.2 33.36,73.784 C 34.368,75.177 34.872,76.832 34.872,78.752 C 34.872,80.815 34.283,82.52 33.107,83.864 C 31.931,85.207 30.287,85.88 28.175,85.88 C 25.727,85.88 23.663,85.088 21.984,83.504 C 20.16,81.871 19.248,79.735 19.248,77.096 C 19.103,70.376 21.768,65.504 27.24,62.48 C 30.216,60.849 33.504,60.009 37.104,59.96 C 40.799,59.864 44.4,61.028 47.904,63.452 C 51.408,65.876 53.832,68.96 55.176,72.703 C 55.991,74.959 56.4,77.383 56.4,79.974 C 56.4,82.23 56.112,84.725 55.536,87.461 C 54.911,90.342 53.711,93.462 51.936,96.822 z M 59.207,69.104 C 59.158,68 59.519,67.089 60.287,66.369 C 61.055,65.649 61.991,65.265 63.095,65.217 C 64.199,65.217 65.147,65.566 65.939,66.261 C 66.731,66.957 67.127,67.858 67.127,68.961 C 67.175,70.065 66.803,71.014 66.011,71.806 C 65.219,72.598 64.295,72.994 63.24,72.994 C 62.136,73.042 61.187,72.682 60.395,71.914 C 59.603,71.146 59.207,70.209 59.207,69.104 z M 59.207,87.249 C 59.207,86.192 59.591,85.293 60.358,84.55 C 61.126,83.805 62.062,83.409 63.167,83.362 C 64.271,83.362 65.207,83.721 65.975,84.442 C 66.743,85.162 67.151,86.049 67.2,87.106 C 67.2,88.21 66.815,89.157 66.048,89.95 C 65.28,90.741 64.368,91.138 63.313,91.138 C 62.209,91.186 61.26,90.826 60.468,90.059 C 59.675,89.289 59.255,88.353 59.207,87.249 z"/></g>\n',
+
+}
+
 
 
 MDocument = function(text)
@@ -387,19 +393,31 @@ MDocument = function(text)
     };
     
     this.SVG = "";
-    this.GenerateSVG = function(maxWidth,xscale,yscale,noteSpacing,staffSpacing)
+    this.GenerateSVG = function(maxWidth,scale)
     {
         this.SVG = "<svg>";
         var currentTime = 0;
-        var x = noteSpacing;
+        var clefWidth = 60;
+        var noteHeight = 10;
+        var noteWidth = 15;
+        var staffXOffset = 0;
+        var clefXOffset = 5;
+        var xscale = scale * noteWidth;
+        var yscale = scale * noteHeight;
+        var noteSpacing = xscale * 2;
+        var staffSpacing = yscale * 4;
+        var x = staffXOffset;
         var y = staffSpacing;
         var minStep = 0;
+        var clefDrawn = false;
+        var newLine = true;
         do
         {
-            if (x == noteSpacing)
+            if (newLine)
             {
                 //draw staves
                 var staffY = y;
+                clefDrawn = false;
                 for(var i in this.Staves)
                 {
                     for(var j = 0; j <= 4; j++)
@@ -409,8 +427,8 @@ MDocument = function(text)
                     }
                     staffY += staffSpacing * this.Staves[i].StaffSpacingCoefficient;
                 }
-                x += xscale + noteSpacing;
-                //TODO: draw clef
+                x = staffXOffset + clefXOffset + clefWidth;
+                newLine = false;
             }
             minStep = Infinity;
             var staffY = y;
@@ -418,14 +436,26 @@ MDocument = function(text)
             {
                 minStep = Math.min(minStep, this.Staves[i].Step(currentTime, x, staffY));
                 staffY += yscale * 4 + staffSpacing * this.Staves[i].StaffSpacingCoefficient;
+                if (!clefDrawn)
+                {
+                    for(var i in this.Staves)
+                    {
+                        if (this.Staves[i].currentClef != null)
+                        {
+                            this.SVG += '<g transform="translate(' + staffXOffset + clefXOffset + ',' + y + ')">\n' + this.Staves[i].currentClef.SVG + '</g>\n';
+                        }
+                    }
+                }
             }
+            clefDrawn = true;
             currentTime += minStep;
             x += xscale + noteSpacing;
             if (x > maxWidth)
             {
                 //new line
-                x = noteSpacing;
+                x = staffXOffset;
                 y = staffY;
+                newLine = true;
             }
             
         }
@@ -448,12 +478,14 @@ MStaff = function(name)
     this.SVG = "";
     this.StaffSpacingCoefficient = 1.0;
     this.Type = "MStaff";
+    this.currentClef = null;
     this.Step = function(currentTime, x, y)
     {
         var minStep = Infinity;
         for(var i in this.Voices)
         {
             minStep = Math.min(minStep, this.Voices[i].Step(currentTime, x, y));
+            this.currentClef = this.Voices[i].currentClef;
         }
         return minStep;
     };
@@ -474,6 +506,7 @@ MVoice = function(name)
     this.Notes = new Array();
     this.SVG = "";
     this.Type = "MVoice";
+    this.currentClef = null;
     this.Step = function(currentTime, x, y)
     {
         if (currentTime == 0)
@@ -584,7 +617,7 @@ MPitch = function(name)
     this.Type = "MPitch";
     this.GetValue = function()
     {
-        return this.Name.charCodeAt(0) - "A".charCodeAt(0) + 7 * (this.Octave + (this.Name.charCodeAt(0) < "C".charCodeAt(0) ? 1 : 0));
+        return this.Name.charCodeAt(0) - "A".charCodeAt(0)  + 7 * (this.Octave + (this.Name.charCodeAt(0) < "C".charCodeAt(0) ? 1 : 0));
     };
 };
 
@@ -647,9 +680,10 @@ MGroup = function()
     }
 }
 
-MClef = function(pitch)
+MClef = function(pitch,svg)
 {
     this.Pitch = pitch; //the pitch of the center line
+    this.SVG = svg;
     this.Type = "MClef";
     this.GetNotes = function()
     {
@@ -658,10 +692,10 @@ MClef = function(pitch)
 }
 
 //pre-defined cleffs
-muse.settings.clefs["G"] = new MClef(new MPitch("B"))
+muse.settings.clefs["G"] = new MClef(new MPitch("B"),svgDrawings.TrebleClef);
 muse.settings.clefs["G"].Pitch.Octave = 4;
 
-muse.settings.clefs["F"] = new MClef(new MPitch("D"))
+muse.settings.clefs["F"] = new MClef(new MPitch("D"),svgDrawings.BassClef);
 muse.settings.clefs["F"].Pitch.Octave = 3;
 
 
