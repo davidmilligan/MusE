@@ -402,7 +402,6 @@ MDocument = function(text)
                 var staffY = y;
                 for(var i in this.Staves)
                 {
-                    minStep = Math.min(minStep, this.Staves[i].Step(currentTime, x, staffY));
                     for(var j = 0; j <= 4; j++)
                     {
                         staffY += yscale;
@@ -419,6 +418,7 @@ MDocument = function(text)
                 minStep = Math.min(minStep, this.Staves[i].Step(currentTime, x, staffY));
                 staffY += yscale * 4 + staffSpacing * this.Staves[i].StaffSpacingCoefficient;
             }
+            currentTime += minStep;
             x += xscale + noteSpacing;
             if (x > maxWidth)
             {
@@ -454,6 +454,7 @@ MStaff = function(name)
         {
             minStep = Math.min(minStep, this.Voices[i].Step(currentTime, x, y));
         }
+        return minStep;
     };
     this.Draw = function(xscale,yscale)
     {
