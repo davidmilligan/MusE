@@ -126,158 +126,165 @@ MDocument = function(text)
                 {
                     this.currentLineOffset++;
                 }
-                if(this.Text[offset] == '|' ||
-                   this.Text[offset] == ':' ||
-                   this.Text[offset] == '{' ||
-                   this.Text[offset] == '}' ||
-                   this.Text[offset] == '(' ||
-                   this.Text[offset] == ')' ||
-                   this.Text[offset] == '=' ||
-                   this.Text[offset] == '$' ||
-                   this.Text[offset] == '%')
+                if(/^([\{,\},\(,\),\=,\$,\%,\+,\-,\*]|\|\=|\:\=)/.test(this.Text.substring(offset)))
                 {
                     break;
                 }
             }
             var currentText = this.Text.substring(position,offset);
-            switch(this.Text[offset])
+            var readNumber = function()
             {
-                case '|':
-                    if(this.Text[offset+1] == '=')
+                for(var numberPosition = offset + 1; numberPosition < text.length; numberPosition++)
+                {
+                    if(/\S/.test(text[numberPosition]))
                     {
-                        currentStaff = new MStaff(currentText);
-                        this.Staves.push(currentStaff);
-                    }
-                    else
-                    {
-                        muse.error("Parse error at offset " + offset);
-                    }
-                    position = offset + 1;
-                    muse.currentColumn++;
-                    break;
-                case ':':
-                    if(this.Text[offset+1] == '=')
-                    {
-                        if (currentStaff == null)
+                        var numberOffset = 0;
+                        for(numberOffset = numberPosition; numberOffset < text.length; numberOffset++)
                         {
-                            currentStaff = new MStaff(currentText);
-                            this.Staves.push(currentStaff);
-                        }
-                        currentVoice = new MVoice(currentText);
-                        currentStaff.Voices.push(currentVoice);
-                    }
-                    else
-                    {
-                        muse.error("Parse error at offset " + offset);
-                    }
-                    position = offset + 1;
-                    muse.currentColumn++;
-                    break;
-                case '{':
-                    currentPitch = this.ParsePitch(currentText);
-                    position = offset;
-                    break;
-                case '}':
-                    var currentTimes = this.ParseTime(currentText);
-                    if (currentGroup != null)
-                    {
-                        for(var i in currentTimes)
-                        {
-                            currentGroup.Notes.push(new MNote(currentPitch,currentTimes[i]));
+                            if (/\D/.test(text[numberOffset]))
+                            {
+                                break;
+                            }
                         }
                     }
-                    else
+                }
+                
+            };
+            if (/^\|\=/.test(this.Text.substring(offset)))
+            {
+                currentStaff = new MStaff(currentText);
+                this.Staves.push(currentStaff);
+                position = offset + 1;
+                muse.currentColumn++;
+            }
+            else if (/^\:\=/.test(this.Text.substring(offset)))
+            {
+                if (currentStaff == null)
+                {
+                    currentStaff = new MStaff(currentText);
+                    this.Staves.push(currentStaff);
+                }
+                currentVoice = new MVoice(currentText);
+                currentStaff.Voices.push(currentVoice);
+                position = offset + 1;
+                muse.currentColumn++;
+            }
+            else if (/^\{/.test(this.Text.substring(offset)))
+            {
+                currentPitch = this.ParsePitch(currentText);
+                position = offset;
+            }
+            else if (/^\}/.test(this.Text.substring(offset)))
+            {
+                var currentTimes = this.ParseTime(currentText);
+                if (currentGroup != null)
+                {
+                    for(var i in currentTimes)
                     {
-                        for(var i in currentTimes)
-                        {
-                            getCurrentVoice().Notes.push(new MNote(currentPitch,currentTimes[i]));
-                        }
+                        currentGroup.Notes.push(new MNote(currentPitch,currentTimes[i]));
                     }
-                    position = offset;
-                    break;
-                case '(':
-                    if (currentGroup != null)
+                }
+                else
+                {
+                    for(var i in currentTimes)
                     {
-                        var newGroup = new MGroup();
-                        currentGroup.Notes.push(newGroup);
-                        groups.push(newGroup);
-                        currentGroup = newGroup;
+                        getCurrentVoice().Notes.push(new MNote(currentPitch,currentTimes[i]));
                     }
-                    else
-                    {
-                        currentGroup = new MGroup();
-                        groups.push(newGroup);
-                        getCurrentVoice().Notes.push(currentGroup);
-                    }
-                    position = offset;
-                    break;
-                case '=':
-                    if (currentGroup != null)
-                    {
-                        currentGroup.Name = currentText;
-                        namedGroups[currentText] = currentGroup;
-                    }
-                    break;
-                case ')':
+                }
+                position = offset;
+            }
+            else if (/^\(/.test(this.Text.substring(offset)))
+            {
+                if (currentGroup != null)
+                {
+                    var newGroup = new MGroup();
+                    currentGroup.Notes.push(newGroup);
+                    groups.push(newGroup);
+                    currentGroup = newGroup;
+                }
+                else
+                {
+                    currentGroup = new MGroup();
+                    groups.push(newGroup);
+                    getCurrentVoice().Notes.push(currentGroup);
+                }
+                position = offset;
+            }
+            else if (/^\=/.test(this.Text.substring(offset)))
+            {
+                if (currentGroup != null)
+                {
+                    currentGroup.Name = currentText;
+                    namedGroups[currentText] = currentGroup;
+                }
+            }
+            else if (/^\)/.test(this.Text.substring(offset)))
+            {
+                if (groups.length > 0)
+                {
+                    groups.pop();
                     if (groups.length > 0)
                     {
-                        groups.pop();
-                        if (groups.length > 0)
+                        currentGroup = groups[groups.length - 1];
+                    }
+                    else
+                    {
+                        currentGroup = null;
+                    }
+                }
+                else
+                {
+                    muse.error("illegal char ')'");
+                }
+                position = offset;
+            }
+            else if (/^\$/.test(this.Text.substring(offset)))
+            {
+                if (varStarted)
+                {
+                    if (namedGroups[currentText] != null)
+                    {
+                        if (currentGroup != null)
                         {
-                            currentGroup = groups[groups.length - 1];
+                            currentGroup.Notes.push(namedGroups[currentText].Clone());
                         }
                         else
                         {
-                            currentGroup = null;
+                            getCurrentVoice().Notes.push(namedGroups[currentText].Clone());
                         }
                     }
-                    else
+                }
+                varStarted = !varStarted;
+                position = offset;
+            }
+            else if (/^\%/.test(this.Text.substring(offset)))
+            {
+                if (clefStarted)
+                {
+                    var clef = muse.settings.clefs[currentText];
+                    if (clef == null)
                     {
-                        muse.error("illegal char ')'");
+                        clef = new MClef(this.ParsePitch(currentText));
                     }
-                    position = offset;
-                    break;
-                case '$':
-                    if (varStarted)
+                    if (clef != null)
                     {
-                        if (namedGroups[currentText] != null)
+                        if (currentGroup != null)
                         {
-                            if (currentGroup != null)
-                            {
-                                currentGroup.Notes.push(namedGroups[currentText].Clone());
-                            }
-                            else
-                            {
-                                getCurrentVoice().Notes.push(namedGroups[currentText].Clone());
-                            }
+                            currentGroup.Notes.push(clef);
+                        }
+                        else
+                        {
+                            getCurrentVoice().Notes.push(clef);
                         }
                     }
-                    varStarted = !varStarted;
-                    position = offset;
-                    break;
-                case '%':
-                    if (clefStarted)
-                    {
-                        var clef = muse.settings.clefs[currentText];
-                        if (clef == null)
-                        {
-                            clef = new MClef(this.ParsePitch(currentText));
-                        }
-                        if (clef != null)
-                        {
-                            if (currentGroup != null)
-                            {
-                                currentGroup.Notes.push(clef);
-                            }
-                            else
-                            {
-                                getCurrentVoice().Notes.push(clef);
-                            }
-                        }
-                    }
-                    clefStarted = !clefStarted;
-                    position = offset;
-                    break;
+                }
+                clefStarted = !clefStarted;
+                position = offset;
+            }
+            else if (/^\+/.test(this.Text.substring(offset)))
+            {
+                //transpose operator
+                var operand = readNumber();
             }
         }
         muse.currentLine = 0;
@@ -289,7 +296,7 @@ MDocument = function(text)
         var state = 1;
         for(var position = 0; position < text.length; position++)
         {
-            if(!isWhitespace(text[position]))
+            if(/\S/.test(text[position]))
             {
                 var newPitch = null;
                 var offset = 0;
@@ -297,7 +304,7 @@ MDocument = function(text)
                 {
                     if(state == 1)
                     {
-                        if((text.charCodeAt(offset) >= 'A'.charCodeAt(0) && text.charCodeAt(offset) <= 'G'.charCodeAt(0)) || text[offset] == '~')
+                        if(/[A-G,~]/.test(text[offset]))//(text.charCodeAt(offset) >= 'A'.charCodeAt(0) && text.charCodeAt(offset) <= 'G'.charCodeAt(0)) || text[offset] == '~')
                         {
                             newPitch = new MPitch(text[offset]);
                             pitches.push(newPitch);
@@ -328,7 +335,7 @@ MDocument = function(text)
                     }
                     if(state == 3)
                     {
-                        if(!(isDigit(text[offset]) || text[offset] == '+' || text[offset] == '-') || offset == text.length - 1)
+                        if(!/\d|\+|\-/.test(text[offset]) || offset == text.length - 1)
                         {
                             if(offset == text.length - 1)
                             {
@@ -371,7 +378,7 @@ MDocument = function(text)
         times.push(newTime);
         for(var position = 0; position < text.length; position++)
         {
-            if(!isWhitespace(text[position]))
+            if(/\S/.test(text[position]))
             {
                 var offset = 0;
                 for(offset = position; offset < text.length; offset++)
@@ -771,14 +778,3 @@ muse.settings.clefs["G"].Pitch.Octave = 4;
 
 muse.settings.clefs["F"] = new MClef(new MPitch("D"),svgDrawings.BassClef);
 muse.settings.clefs["F"].Pitch.Octave = 3;
-
-
-isDigit = function(ch)
-{
-    return ch.charCodeAt(0) >= "0".charCodeAt(0) && ch.charCodeAt(0) <= "9".charCodeAt(0);
-};
-
-isWhitespace = function(ch)
-{
-    return ch == " " || ch == "\t" || ch == "\r" || ch == "\n";
-};
