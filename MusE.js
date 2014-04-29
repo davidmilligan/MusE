@@ -70,6 +70,9 @@ var svgDrawings =
     WholeNoteHead: '<g transform="scale(0.634,0.634)" > <path d="M 9.125,0.0030002594 C 4.03428,0.18520026 0,2.5856003 0,5.5030003 C 0,8.5390003 4.368,11.003 9.75,11.003 C 15.132,11.003 19.5,8.5390003 19.5,5.5030003 C 19.5,2.4670003 15.132,0.0030002594 9.75,0.0030002594 C 9.53977,0.0030002594 9.33194,-0.0043997406 9.125,0.0030002594 z M 7.5,1.0655003 C 8.8579,0.92650026 10.56798,1.5561003 12,2.8467003 C 14.14502,4.7799003 14.87122,7.4906003 13.625,8.9092003 L 13.59375,8.9405003 C 12.32289,10.3506 9.53145,9.9153003 7.375,7.9717003 C 5.21855,6.0282003 4.51039,3.2881003 5.78125,1.8780003 C 6.20818,1.4043003 6.81306,1.1358003 7.5,1.0655003 z " fill="black"/></g>\n',
     WhiteNoteHead: '<g transform="translate(-176.0000,-536.3480)" > <path d="M 183.32825,537.99494 C 183.25004,538.79049 182.64569,539.39862 182.13138,539.95603 C 180.97913,541.06357 179.56711,541.94914 178.01121,542.32187 C 177.55025,542.40218 176.80690,542.47930 176.67383,541.87610 C 176.54514,541.23787 177.02374,540.67784 177.38470,540.20578 C 178.32107,539.11438 179.54806,538.29916 180.84608,537.71532 C 181.52160,537.46034 182.30762,537.13863 183.01565,537.44746 C 183.20917,537.55686 183.34251,537.76645 183.32825,537.99494 z M 181.39173,536.34800 C 179.63336,536.36064 177.96477,537.33707 176.88097,538.70616 C 176.15644,539.64489 175.67538,541.00514 176.26344,542.13082 C 176.70654,543.03586 177.76412,543.39482 178.70619,543.34316 C 180.33110,543.30889 181.83790,542.40806 182.91461,541.21868 C 183.71165,540.30383 184.29905,538.98012 183.83740,537.77066 C 183.50354,536.89010 182.58732,536.37839 181.68335,536.35743 C 181.58628,536.35097 181.48896,536.34796 181.39173,536.34800 z" fill="black"/></g>\n',
     BlackNoteHead: '<g transform="translate(-176.0000,-536.3480)" > <path d="M181.4,536.3c-1.8,0-3.4,1-4.5,2.4c-0.7,0.9-1.2,2.3-0.6,3.4c0.4,0.9,1.5,1.3,2.4,1.2c1.6,0,3.1-0.9,4.2-2.1c0.8-0.9,1.4-2.2,0.9-3.4c-0.3-0.9-1.3-1.4-2.2-1.4C181.6,536.4,181.5,536.3,181.4,536.3z" fill="black"/></g>\n',
+    ClefWidth: 40,
+    NoteHeight: 7,
+    NoteWidth: 8,
 }
 
 
@@ -84,7 +87,6 @@ MDocument = function(text)
     this.currentLineOffset = 0;
     this.position = 0;
     this.offset = 0;
-    this.Type = "MDocument";
     this.Parse = function()
     {
         var currentPitch = null;
@@ -401,13 +403,11 @@ MDocument = function(text)
     {
         this.SVG = "<svg>";
         var currentTime = 0;
-        var clefWidth = 40 * scale;
-        var noteHeight = 7;
-        var noteWidth = 8;
+        var clefWidth = svgDrawings.ClefWidth * scale;
         var staffXOffset = 0 * scale;
         var clefXOffset = 5 * scale;
-        var xscale = scale * noteWidth;
-        var yscale = scale * noteHeight;
+        var xscale = scale * svgDrawings.NoteWidth;
+        var yscale = scale * svgDrawings.NoteHeight;
         var noteSpacing = xscale * 2;
         var staffSpacing = yscale * 4;
         var x = staffXOffset;
@@ -481,10 +481,10 @@ MStaff = function(name)
     this.Voices = new Array();
     this.SVG = "";
     this.StaffSpacingCoefficient = 1.0;
-    this.Type = "MStaff";
     this.currentClef = null;
     this.Step = function(currentTime, x, y)
     {
+        var type = typeof(this);
         var minStep = Infinity;
         for(var i in this.Voices)
         {
@@ -509,7 +509,6 @@ MVoice = function(name)
     this.Name = name;
     this.Notes = new Array();
     this.SVG = "";
-    this.Type = "MVoice";
     this.currentClef = null;
     this.Step = function(currentTime, x, y)
     {
@@ -552,7 +551,7 @@ MVoice = function(name)
     };
     this.CheckClef = function()
     {
-        while(this.currentNote != null && this.currentNote.Type == "MClef")
+        while(this.currentNote != null && this.currentNote instanceof MClef)
         {
             this.currentClef = this.currentNote;
             this.currentNote = this.notesTemp.pop();
@@ -582,6 +581,15 @@ MVoice = function(name)
         }
         return result;
     };
+    this.Clone = function()
+    {
+        var clone = new MVoice(this.Name);
+        for(var i in this.Notes)
+        {
+            clone.Notes.push(this.Notes[i].Clone());
+        }
+        return clone;
+    };
 };
 
 MNote = function(pitches, time)
@@ -589,7 +597,6 @@ MNote = function(pitches, time)
     this.Pitches = pitches;
     this.Time = time;
     this.SVG = "";
-    this.Type = "MNote";
     this.GetNotes = function()
     {
         return [this];
@@ -620,6 +627,19 @@ MNote = function(pitches, time)
         }
         return this.SVG;
     };
+    this.Clone = function()
+    {
+        var clone = new MNote(new Array(), new Array());
+        for(var i in this.Pitches)
+        {
+            clone.Pitches.push(this.Pitches[i].Clone());
+        }
+        if (this.Time instanceof MTime)
+        {
+            clone.Time = this.Time.Clone();
+        }
+        return clone;
+    };
 };
 
 MPitch = function(name)
@@ -627,17 +647,22 @@ MPitch = function(name)
     this.Name = name;
     this.Mod = 0;
     this.Octave = 0;
-    this.Type = "MPitch";
     this.GetValue = function()
     {
         return this.Name.charCodeAt(0) - "A".charCodeAt(0)  + 7 * (this.Octave + (this.Name.charCodeAt(0) < "C".charCodeAt(0) ? 1 : 0));
+    };
+    this.Clone = function()
+    {
+        var clone = new MPitch(this.Name);
+        clone.Mod = this.Mod;
+        clone.Octave = this.Octave;
+        return clone;
     };
 };
 
 MTime = function()
 {
     this.Values = new Array();
-    this.Type = "MTime";
     this.SVG = "";
     this.GetValue = function()
     {
@@ -686,13 +711,21 @@ MTime = function()
         }
         return this.SVG;
     };
+    this.Clone = function()
+    {
+        var clone = new MTime();
+        for(var i in this.Values)
+        {
+            clone.Values.push(this.Values[i]);
+        }
+        return clone;
+    };
 };
 
 MGroup = function()
 {
     this.Name = "";
     this.Notes = new Array();
-    this.Type = "MGroup";
     this.GetNotes = function()
     {
         var result = new Array();
@@ -705,19 +738,31 @@ MGroup = function()
             }
         }
         return result;
-    }
+    };
+    this.Clone = function()
+    {
+        var clone = new MGroup(this.Name);
+        for(var i in this.Notes)
+        {
+            clone.Notes.push(this.Notes[i].Clone());
+        }
+        return clone;
+    };
 }
 
 MClef = function(pitch,svg)
 {
     this.Pitch = pitch; //the pitch of the center line
     this.SVG = svg;
-    this.Type = "MClef";
     this.GetNotes = function()
     {
         return [this];
     };
     this.Draw = function(scale,xscale,yscale){ return ""; };
+    this.Clone = function()
+    {
+        return new MClef(this.pitch.Clone(),this.SVG);
+    };
 }
 
 //pre-defined cleffs
