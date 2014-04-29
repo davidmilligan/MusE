@@ -132,24 +132,6 @@ MDocument = function(text)
                 }
             }
             var currentText = this.Text.substring(position,offset);
-            var readNumber = function()
-            {
-                for(var numberPosition = offset + 1; numberPosition < text.length; numberPosition++)
-                {
-                    if(/\S/.test(text[numberPosition]))
-                    {
-                        var numberOffset = 0;
-                        for(numberOffset = numberPosition; numberOffset < text.length; numberOffset++)
-                        {
-                            if (/\D/.test(text[numberOffset]))
-                            {
-                                break;
-                            }
-                        }
-                    }
-                }
-                
-            };
             if (/^\|\=/.test(this.Text.substring(offset)))
             {
                 currentStaff = new MStaff(currentText);
@@ -215,14 +197,15 @@ MDocument = function(text)
                 if (currentGroup != null)
                 {
                     currentGroup.Name = currentText;
-                    namedGroups[currentText] = currentGroup;
+                    namedGroups[currentGroup.Name] = currentGroup;
                 }
+                position = offset;
             }
             else if (/^\)/.test(this.Text.substring(offset)))
             {
                 if (groups.length > 0)
                 {
-                    groups.pop();
+                    namedGroups[currentGroup.Name] = currentGroup.Clone();
                     if (groups.length > 0)
                     {
                         currentGroup = groups[groups.length - 1];
@@ -281,10 +264,24 @@ MDocument = function(text)
                 clefStarted = !clefStarted;
                 position = offset;
             }
-            else if (/^\+/.test(this.Text.substring(offset)))
+            else if (/^\+/.test(this.Text.substring(offset)) || /^\-/.test(this.Text.substring(offset)))
             {
-                //transpose operator
-                var operand = readNumber();
+                var rgResult;
+                if((rgResult = /^\s*(\d+)/.exec(this.Text.substring(offset + 1))) != null)
+                {
+                    var operand = rgResult[1];
+                    position = offset + rgResult[0].length;
+                    var lastItem;
+                    if (currentGroup != null)
+                    {
+                        lastItem = currentGroup.Notes[currentGroup.Notes.length - 1]
+                    }
+                    else
+                    {
+                        lastItem = getCurrentVoice().Notes[getCurrentVoice().Notes.length - 1];
+                    }
+                    lastItem.Transpose((/^\-/.test(this.Text.substring(offset))?-1:1) * Number(operand));
+                }
             }
         }
         muse.currentLine = 0;
@@ -634,6 +631,13 @@ MNote = function(pitches, time)
         }
         return this.SVG;
     };
+    this.Transpose = function(x)
+    {
+        for(var i in this.Pitches)
+        {
+            this.Pitches[i].Transpose(x)
+        }
+    };
     this.Clone = function()
     {
         var clone = new MNote(new Array(), new Array());
@@ -656,7 +660,14 @@ MPitch = function(name)
     this.Octave = 0;
     this.GetValue = function()
     {
-        return this.Name.charCodeAt(0) - "A".charCodeAt(0)  + 7 * (this.Octave + (this.Name.charCodeAt(0) < "C".charCodeAt(0) ? 1 : 0));
+        return this.Name.charCodeAt(0) - "A".charCodeAt(0) + 7 * (this.Octave + (this.Name.charCodeAt(0) < "C".charCodeAt(0) ? 1 : 0));
+    };
+    this.Transpose = function(x)
+    {
+        var newValue = this.GetValue() + x;
+        this.Octave = Math.floor(newValue / 7);
+        this.Name = String.fromCharCode("A".charCodeAt(0) + newValue % 7);
+        this.Octave -= (this.Name.charCodeAt(0) < "C".charCodeAt(0) ? 1 : 0);
     };
     this.Clone = function()
     {
@@ -755,6 +766,13 @@ MGroup = function()
         }
         return clone;
     };
+    this.Transpose = function(x)
+    {
+        for(var i in this.Notes)
+        {
+            this.Notes[i].Transpose(x)
+        }
+    };
 }
 
 MClef = function(pitch,svg)
@@ -769,6 +787,10 @@ MClef = function(pitch,svg)
     this.Clone = function()
     {
         return new MClef(this.pitch.Clone(),this.SVG);
+    };
+    this.Transpose = function(x)
+    {
+        this.Pitch.Transpose(x);
     };
 }
 
