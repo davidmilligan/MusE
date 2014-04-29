@@ -181,7 +181,7 @@ MDocument = function(text)
                     {
                         for(var i in currentTimes)
                         {
-                            currentGroup.push(new MNote(currentPitch,currentTimes[i]));
+                            currentGroup.Notes.push(new MNote(currentPitch,currentTimes[i]));
                         }
                     }
                     else
@@ -204,6 +204,7 @@ MDocument = function(text)
                     else
                     {
                         currentGroup = new MGroup();
+                        groups.push(newGroup);
                         getCurrentVoice().Notes.push(currentGroup);
                     }
                     position = offset;
@@ -241,11 +242,11 @@ MDocument = function(text)
                         {
                             if (currentGroup != null)
                             {
-                                currentGroup.push(namedGroups[currentText]);
+                                currentGroup.Notes.push(namedGroups[currentText].Clone());
                             }
                             else
                             {
-                                getCurrentVoice().Notes.push(namedGroups[currentText]);
+                                getCurrentVoice().Notes.push(namedGroups[currentText].Clone());
                             }
                         }
                     }
@@ -264,11 +265,11 @@ MDocument = function(text)
                         {
                             if (currentGroup != null)
                             {
-                                currentGroup.push(new MNote(currentPitch,currentTimes[i]));
+                                currentGroup.Notes.push(clef);
                             }
                             else
                             {
-                                getCurrentVoice().Notes.push(new MNote(currentPitch,currentTimes[i]));
+                                getCurrentVoice().Notes.push(clef);
                             }
                         }
                     }
@@ -715,6 +716,7 @@ MClef = function(pitch,svg)
     {
         return [this];
     };
+    this.Draw = function(scale,xscale,yscale){ return ""; };
 }
 
 //pre-defined cleffs
