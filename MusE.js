@@ -387,6 +387,7 @@ MDocument = function(text)
                     if(text[offset] == ',')
                     {
                         newTime = new MTime();
+                        times.push(newTime);
                         position = offset + 1;
                     }
                 }
