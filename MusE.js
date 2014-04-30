@@ -187,7 +187,7 @@ MDocument = function(text)
                 else
                 {
                     currentGroup = new MGroup();
-                    groups.push(newGroup);
+                    groups.push(currentGroup);
                     getCurrentVoice().Notes.push(currentGroup);
                 }
                 position = offset;
@@ -206,6 +206,7 @@ MDocument = function(text)
                 if (groups.length > 0)
                 {
                     namedGroups[currentGroup.Name] = currentGroup.Clone();
+                    groups.pop();
                     if (groups.length > 0)
                     {
                         currentGroup = groups[groups.length - 1];
