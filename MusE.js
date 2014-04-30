@@ -614,20 +614,39 @@ MNote = function(pitches, time)
     this.Draw = function(scale,xscale,yscale)
     {
         this.SVG = "";
-        for(var i in this.Pitches)
+        if (this.Pitches.length > 0)
         {
-            var yPosition = this.DrawY + yscale * (5 + this.Clef.Pitch.GetValue() - this.Pitches[i].GetValue()) / 2;
-            //leger lines
-            for(var j = 10; j <= 6 + this.Clef.Pitch.GetValue() - this.Pitches[i].GetValue(); j+=2)
+            this.Pitches.sort(function(a,b)
             {
-                this.SVG += '<rect x="' + (this.DrawX - xscale * 0.75) + '" y="' + (this.DrawY + yscale * j / 2) + '" width="' + (xscale * 1.5) + '" height="1" fill="black"/>\n';
-            }
-            for(var j = 0; j >= 6 + this.Clef.Pitch.GetValue() - this.Pitches[i].GetValue(); j-=2)
+                return a.GetValue() - b.GetValue();
+            });
+            var up = (this.Pitches[0].GetValue() + this.Pitches[this.Pitches.length - 1].GetValue()) / 2 < this.Clef.Pitch.GetValue();
+            if (!up)
             {
-                this.SVG += '<rect x="' + (this.DrawX - xscale * 0.75) + '" y="' + (this.DrawY + yscale * j / 2) + '" width="' + (xscale * 1.5) + '" height="1" fill="black"/>\n';
+                this.Pitches.sort(function(a,b)
+                {
+                    return b.GetValue() - a.GetValue();
+                });
             }
-            var up = this.Pitches[i].GetValue() < this.Clef.Pitch.GetValue();
-            this.SVG += this.Time.Draw(this.DrawX, yPosition, scale, xscale, yscale, up);
+            var lastPitch = null;
+            var lastPitchFlipped = false;
+            for(var i in this.Pitches)
+            {
+                var yPosition = this.DrawY + yscale * (5 + this.Clef.Pitch.GetValue() - this.Pitches[i].GetValue()) / 2;
+                lastPitchFlipped = lastPitch != null && !lastPitchFlipped && Math.abs(lastPitch.GetValue() - this.Pitches[i].GetValue()) == 1;
+                
+                //leger lines
+                for(var j = 10; j <= 6 + this.Clef.Pitch.GetValue() - this.Pitches[i].GetValue(); j+=2)
+                {
+                    this.SVG += '<rect x="' + (this.DrawX - xscale * 0.75) + '" y="' + (this.DrawY + yscale * j / 2) + '" width="' + (xscale * 1.5) + '" height="1" fill="black"/>\n';
+                }
+                for(var j = 0; j >= 6 + this.Clef.Pitch.GetValue() - this.Pitches[i].GetValue(); j-=2)
+                {
+                    this.SVG += '<rect x="' + (this.DrawX - xscale * 0.75) + '" y="' + (this.DrawY + yscale * j / 2) + '" width="' + (xscale * 1.5) + '" height="1" fill="black"/>\n';
+                }
+                this.SVG += this.Time.Draw(this.DrawX, yPosition, scale, xscale, yscale, up, lastPitchFlipped);
+                lastPitch = this.Pitches[i];
+            }
         }
         return this.SVG;
     };
@@ -691,11 +710,11 @@ MTime = function()
         }
         return total;
     };
-    this.Draw = function(x,y,scale,xscale,yscale,up)
+    this.Draw = function(x,y,scale,xscale,yscale,up,flip)
     {
         this.SVG = "";
         
-        this.SVG += '<g transform="translate(' + (x - xscale/2) + ',' + y + ')"><g transform="scale(' + scale + ',' + scale + ')">\n';
+        this.SVG += '<g transform="translate(' + (x - xscale/2 + (up?1:-1) * (flip?1:0) * xscale) + ',' + y + ')"><g transform="scale(' + scale + ',' + scale + ')">\n';
         if (this.Values[0] == 1)
         {
             this.SVG += svgDrawings.WholeNoteHead;
