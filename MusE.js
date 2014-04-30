@@ -126,7 +126,7 @@ MDocument = function(text)
                 {
                     this.currentLineOffset++;
                 }
-                if(/^([\{,\},\(,\),\=,\$,\%,\+,\-,\*]|\|\=|\:\=)/.test(this.Text.substring(offset)))
+                if(/^([\{\}\(\)\=\$\%\+\-\*]|\|\=|\:\=)/.test(this.Text.substring(offset)))
                 {
                     break;
                 }
@@ -163,14 +163,14 @@ MDocument = function(text)
                 {
                     for(var i in currentTimes)
                     {
-                        currentGroup.Notes.push(new MNote(currentPitch,currentTimes[i]));
+                        currentGroup.Notes.push(new MNote(currentPitch,currentTimes[i]).Clone());
                     }
                 }
                 else
                 {
                     for(var i in currentTimes)
                     {
-                        getCurrentVoice().Notes.push(new MNote(currentPitch,currentTimes[i]));
+                        getCurrentVoice().Notes.push(new MNote(currentPitch,currentTimes[i]).Clone());
                     }
                 }
                 position = offset;
@@ -274,13 +274,40 @@ MDocument = function(text)
                     var lastItem;
                     if (currentGroup != null)
                     {
-                        lastItem = currentGroup.Notes[currentGroup.Notes.length - 1]
+                        lastItem = currentGroup.Notes[currentGroup.Notes.length - 1];
                     }
                     else
                     {
                         lastItem = getCurrentVoice().Notes[getCurrentVoice().Notes.length - 1];
                     }
                     lastItem.Transpose((/^\-/.test(this.Text.substring(offset))?-1:1) * Number(operand));
+                }
+            }
+            else if (/^\*/.test(this.Text.substring(offset)))
+            {
+                var rgResult;
+                if((rgResult = /^\s*(\d+)/.exec(this.Text.substring(offset + 1))) != null)
+                {
+                    var operand = rgResult[1];
+                    position = offset + rgResult[0].length;
+                    var lastItem;
+                    if (currentGroup != null)
+                    {
+                        lastItem = currentGroup.Notes[currentGroup.Notes.length - 1];
+                        for(var i = 1; i < Number(operand); i++)
+                        {
+                            currentGroup.Notes.push(lastItem.Clone());
+                        }
+                    }
+                    else
+                    {
+                        lastItem = getCurrentVoice().Notes[getCurrentVoice().Notes.length - 1];
+                        for(var i = 1; i < Number(operand); i++)
+                        {
+                            getCurrentVoice().Notes.push(lastItem.Clone());
+                        }
+                    }
+                    
                 }
             }
         }
