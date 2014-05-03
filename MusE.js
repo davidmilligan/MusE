@@ -532,7 +532,7 @@ MStaff = function(name)
         this.SVG = "";
         for(var i in this.Voices)
         {
-            this.SVG += this.Voices[i].Draw(scale,xscale,yscale) + "\n";
+            this.SVG += this.Voices[i].Draw(scale,xscale,yscale,(i == 0 && this.Voices.length > 1), i>0) + "\n";
         }
         return this.SVG;
     };
@@ -596,13 +596,13 @@ MVoice = function(name)
         }
         return this.currentNote;
     };
-    this.Draw = function(scale,xscale,yscale)
+    this.Draw = function(scale,xscale,yscale, forceUp, forceDown)
     {
         this.SVG = "";
         var notes = this.GetNotes();
         for(var i in notes)
         {
-            this.SVG += notes[i].Draw(scale,xscale,yscale) + "\n";
+            this.SVG += notes[i].Draw(scale,xscale,yscale,forceUp,forceDown) + "\n";
         }
         return this.SVG;
     };
@@ -645,7 +645,7 @@ MNote = function(pitches, time)
         this.DrawY = y;
         this.Clef = clef;
     }
-    this.Draw = function(scale,xscale,yscale)
+    this.Draw = function(scale,xscale,yscale,forceUp,forceDown)
     {
         this.SVG = "";
         if (this.Pitches.length > 0)
@@ -655,6 +655,14 @@ MNote = function(pitches, time)
                 return a.GetValue() - b.GetValue();
             });
             var up = (this.Pitches[0].GetValue() + this.Pitches[this.Pitches.length - 1].GetValue()) / 2 < this.Clef.Pitch.GetValue();
+            if (forceUp)
+            {
+                up = true;
+            }
+            if (forceDown)
+            {
+                up = false;
+            }
             if (!up)
             {
                 this.Pitches.sort(function(a,b)
