@@ -497,7 +497,7 @@ MDocument = function(text)
             }
             
         }
-        while(minStep > 0);
+        while(minStep < Infinity);
         for(var i in this.Staves)
         {
             this.SVG += this.Staves[i].Draw(scale,xscale,yscale);
@@ -554,7 +554,7 @@ MVoice = function(name)
         }
         if (this.notesTemp.length == 0)
         {
-            return 0;
+            return Infinity;
         }
         else
         {
@@ -575,13 +575,17 @@ MVoice = function(name)
                 this.CheckClef();
                 if (this.currentNote != null)
                 {
-                    this.nextNoteTime = this.currentNote.Time.GetValue();
+                    this.nextNoteTime += this.currentNote.Time.GetValue();
                     this.currentNote.Step(x,y,this.currentClef);
                     return this.currentNote.Time.GetValue();
                 }
             }
+            else
+            {
+                return this.nextNoteTime - currentTime;
+            }
         }
-        return 0;
+        return Infinity;
     };
     this.CheckClef = function()
     {
