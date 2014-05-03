@@ -463,7 +463,7 @@ MDocument = function(text)
                         staffY += yscale;
                         this.SVG += '<rect x="' + x + '" y="' + staffY + '" width="' + maxWidth + '" height="1" fill="black" />\n';
                     }
-                    staffY += staffSpacing * this.Staves[i].StaffSpacingCoefficient;
+                    staffY += yscale + staffSpacing * this.Staves[i].StaffSpacingCoefficient;
                 }
                 x = staffXOffset + clefXOffset + clefWidth;
                 newLine = false;
@@ -473,17 +473,14 @@ MDocument = function(text)
             for(var i in this.Staves)
             {
                 minStep = Math.min(minStep, this.Staves[i].Step(currentTime, x, staffY));
-                staffY += yscale * 4 + staffSpacing * this.Staves[i].StaffSpacingCoefficient;
                 if (!clefDrawn)
                 {
-                    for(var i in this.Staves)
+                    if (this.Staves[i].currentClef != null)
                     {
-                        if (this.Staves[i].currentClef != null)
-                        {
-                            this.SVG += '<g transform="translate(' + staffXOffset + clefXOffset + ',' + y + ')"><g transform="scale(' + scale + ',' + scale + ')">\n' + this.Staves[i].currentClef.SVG + '</g></g>\n';
-                        }
+                        this.SVG += '<g transform="translate(' + staffXOffset + clefXOffset + ',' + staffY + ')"><g transform="scale(' + scale + ',' + scale + ')">\n' + this.Staves[i].currentClef.SVG + '</g></g>\n';
                     }
                 }
+                staffY += yscale * 6 + staffSpacing * this.Staves[i].StaffSpacingCoefficient;
             }
             clefDrawn = true;
             currentTime += minStep;
