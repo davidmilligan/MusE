@@ -22,10 +22,10 @@
 
 <body>
     <div>
-        <textarea id="code">s1|=t1:=(E4{1}Bb4{2}C5{4})*18
-    t2:=(Bb3{2}C4G#4{2})*31
+        <textarea id="code">staff1|=voice1:=((var1=E4{1}Bb4{2}C5{4})$var1$+5)*9
+        voice2:=(Bb3{2}C4G#4{2})*30
 
-s2|=t3:=%F%(C3{4}E3{4}G3{4}{E3{4})*30</textarea>
+staff2|=voice3:=%F%((var2=C3{4}E3{4}G3{4}{E3{4})$var2$-3)*15$var2$</textarea>
         <button onclick="muse.parse(document.getElementById('code').value,document.getElementById('music'));">Go</button>
         <div id="stderr"></div>
     </div>
