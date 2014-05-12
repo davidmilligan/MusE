@@ -472,7 +472,7 @@ MDocument = function(text)
             var staffY = y;
             for(var i in this.Staves)
             {
-                minStep = Math.min(minStep, this.Staves[i].Step(currentTime, x, staffY));
+                minStep = Math.min(minStep, this.Staves[i].Step(currentTime, x, staffY, yscale));
                 if (!clefDrawn)
                 {
                     if (this.Staves[i].currentClef != null)
@@ -491,10 +491,15 @@ MDocument = function(text)
                 x = staffXOffset;
                 y = staffY;
                 newLine = true;
+                for(var i in this.Staves)
+                {
+                    this.Staves[i].NewLine();
+                }
             }
             
         }
         while(minStep < Infinity);
+        
         for(var i in this.Staves)
         {
             this.SVG += this.Staves[i].Draw(scale,xscale,yscale);
@@ -513,13 +518,13 @@ MStaff = function(name)
     this.SVG = "";
     this.StaffSpacingCoefficient = 1.0;
     this.currentClef = null;
-    this.Step = function(currentTime, x, y)
+    this.Step = function(currentTime, x, y, yscale)
     {
         var type = typeof(this);
         var minStep = Infinity;
         for(var i in this.Voices)
         {
-            minStep = Math.min(minStep, this.Voices[i].Step(currentTime, x, y));
+            minStep = Math.min(minStep, this.Voices[i].Step(currentTime, x, y, yscale));
             this.currentClef = this.Voices[i].currentClef;
         }
         return minStep;
@@ -533,6 +538,13 @@ MStaff = function(name)
         }
         return this.SVG;
     };
+    this.NewLine = function()
+    {
+        for(var i in this.Voices)
+        {
+            this.Voices[i].NewLine();
+        }
+    };
 };
 
 MVoice = function(name)
@@ -541,7 +553,7 @@ MVoice = function(name)
     this.Notes = new Array();
     this.SVG = "";
     this.currentClef = null;
-    this.Step = function(currentTime, x, y)
+    this.Step = function(currentTime, x, y, yscale)
     {
         if (currentTime == 0)
         {
@@ -559,10 +571,16 @@ MVoice = function(name)
             {
                 this.currentNote = this.notesTemp.pop();
                 this.CheckClef();
+                if (this.currentNote.Time.Values[0] > 4)
+                {
+                    this.barGroup = new MGroup();
+                    this.currentNote.barGroup = this.barGroup;
+                    this.barGroup.Notes.push(this.currentNote);
+                }
                 if (this.currentNote != null)
                 {
                     this.nextNoteTime = this.currentNote.Time.GetValue();
-                    this.currentNote.Step(x,y,this.currentClef);
+                    this.currentNote.Step(x,y,yscale,this.currentClef);
                     return this.currentNote.Time.GetValue();
                 }
             }
@@ -570,10 +588,23 @@ MVoice = function(name)
             {
                 this.currentNote = this.notesTemp.pop();
                 this.CheckClef();
+                if (this.currentNote.Time.Values[0] > 4)
+                {
+                    if (this.barGroup == null)
+                    {
+                        this.barGroup = new MGroup();
+                    }
+                    this.currentNote.barGroup = this.barGroup;
+                    this.barGroup.Notes.push(this.currentNote);
+                }
+                else
+                {
+                    this.barGroup = null;
+                }
                 if (this.currentNote != null)
                 {
                     this.nextNoteTime += this.currentNote.Time.GetValue();
-                    this.currentNote.Step(x,y,this.currentClef);
+                    this.currentNote.Step(x,y,yscale,this.currentClef);
                     return this.currentNote.Time.GetValue();
                 }
             }
@@ -603,6 +634,10 @@ MVoice = function(name)
         }
         return this.SVG;
     };
+    this.NewLine = function()
+    {
+        this.barGroup = null;
+    }
     this.GetNotes = function()
     {
         var result = new Array();
@@ -636,11 +671,16 @@ MNote = function(pitches, time)
     {
         return [this];
     };
-    this.Step = function(x,y,clef)
+    this.Step = function(x,y,yscale,clef)
     {
         this.DrawX = x;
         this.DrawY = y;
         this.Clef = clef;
+        for(var i in this.Pitches)
+        {
+            this.Pitches[i].DrawX = x;
+            this.Pitches[i].DrawY = this.DrawY + yscale * (5 + this.Clef.Pitch.GetValue() - this.Pitches[i].GetValue()) / 2;
+        }
     }
     this.Draw = function(scale,xscale,yscale,forceUp,forceDown)
     {
@@ -651,7 +691,42 @@ MNote = function(pitches, time)
             {
                 return a.GetValue() - b.GetValue();
             });
-            var up = (this.Pitches[0].GetValue() + this.Pitches[this.Pitches.length - 1].GetValue()) / 2 < this.Clef.Pitch.GetValue();
+            var up = false;
+            if (this.barGroup != null)
+            {
+                if (this.barGroup.up == null)
+                {
+                    this.barGroup.minValue = Infinity;
+                    this.barGroup.maxValue = -Infinity;
+                    for(var i in this.barGroup.Notes)
+                    {
+                        this.barGroup.Notes[i].Pitches.sort(function(a,b)
+                        {
+                            return a.GetValue() - b.GetValue();
+                        });
+                        
+                        this.barGroup.minValue = Math.min(this.barGroup.minValue, this.barGroup.Notes[i].Pitches[0].GetValue());
+                        this.barGroup.maxValue = Math.max(this.barGroup.maxValue, this.barGroup.Notes[i].Pitches[this.barGroup.Notes[i].Pitches.length - 1].GetValue());
+                    }
+                    this.barGroup.up = (this.barGroup.minValue + this.barGroup.maxValue)/ 2 < this.Clef.Pitch.GetValue();
+                    if (this.barGroup.up)
+                    {
+                        this.barGroup.firstValue = this.barGroup.Notes[0].Pitches[0];
+                        this.barGroup.lastValue = this.barGroup.Notes[this.barGroup.Notes.length - 1].Pitches[0];
+                    }
+                    else
+                    {
+                        this.barGroup.firstValue = this.barGroup.Notes[0].Pitches[this.barGroup.Notes[0].Pitches.length - 1];
+                        this.barGroup.lastValue = this.barGroup.Notes[this.barGroup.Notes.length - 1].Pitches[this.barGroup.Notes[this.barGroup.Notes.length - 1].Pitches.length - 1];
+                    }
+                    this.barGroup.slope = (this.barGroup.lastValue.DrawY - this.barGroup.firstValue.DrawY) / (this.barGroup.lastValue.DrawX - this.barGroup.firstValue.DrawX);
+                }
+                up = this.barGroup.up;
+            }
+            else
+            {
+                up = (this.Pitches[0].GetValue() + this.Pitches[this.Pitches.length - 1].GetValue()) / 2 < this.Clef.Pitch.GetValue();
+            }
             if (forceUp)
             {
                 up = true;
@@ -683,7 +758,7 @@ MNote = function(pitches, time)
                 {
                     this.SVG += '<rect x="' + (this.DrawX - xscale * 0.75) + '" y="' + (this.DrawY + yscale * j / 2) + '" width="' + (xscale * 1.5) + '" height="1" fill="black"/>\n';
                 }
-                this.SVG += this.Time.Draw(this.DrawX, yPosition, scale, xscale, yscale, up, lastPitchFlipped);
+                this.SVG += this.Time.Draw(this, this.DrawX, yPosition, scale, xscale, yscale, up, lastPitchFlipped);
                 if (this.Pitches[i].Mod == 1)
                 {
                     this.SVG += '<g transform="translate(' + (this.DrawX - xscale) + ',' + yPosition + ')"><g transform="scale(' + scale + ',' + scale + ')">' + svgDrawings.Sharp + '</g></g>\n';
@@ -757,7 +832,11 @@ MTime = function()
         }
         return total;
     };
-    this.Draw = function(x,y,scale,xscale,yscale,up,flip)
+    this.BarCount = function()
+    {
+        return Math.floor(Math.log(this.Values[0])/Math.log(2)) - 2;
+    }
+    this.Draw = function(note,x,y,scale,xscale,yscale,up,flip)
     {
         this.SVG = "";
         
@@ -778,19 +857,74 @@ MTime = function()
         if (this.Values[0] > 1)
         {
             var flagHeight = yscale * 3 + scale;
-            var flagTop = y;
-            var xFlag = x;
-            if (up)
+            var flagTop = y + (up? -flagHeight + scale : yscale - scale);
+            
+            if (this.Values[0] > 4 && note.barGroup != null)
             {
-                xFlag += xscale/2 - scale;
-                flagTop -= flagHeight - scale;
+                var previousNote = null;
+                var noteIndex = 0;
+                for(noteIndex = 0; noteIndex < note.barGroup.Notes.length; noteIndex++)
+                {
+                    if (note.barGroup.Notes[noteIndex] == note)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        previousNote = note.barGroup.Notes[noteIndex];
+                    }
+                }
+                if (noteIndex == note.barGroup.Notes.length - 1)
+                {
+                    //last note
+                    if (previousNote == null)
+                    {
+                        //draw individual flag(s)
+                    }
+                    else if (previousNote.Time.BarCount() < note.Time.BarCount())
+                    {
+                        //draw short stubby bar
+                    }
+                }
+                else
+                {
+                    var nextNote = note.barGroup.Notes[noteIndex + 1];
+                    var fullBarsCount = Math.min(note.Time.BarCount(), nextNote.Time.BarCount());
+                    
+                    var flagPos;
+                    var nextFlagPos;
+                    
+                    if (up)
+                    {
+                        flagPos = note.barGroup.firstValue.DrawY - flagHeight + scale + note.barGroup.slope * (note.DrawX - note.barGroup.firstValue.DrawX);
+                        nextFlagPos = note.barGroup.firstValue.DrawY - flagHeight + scale + note.barGroup.slope * (nextNote.DrawX - note.barGroup.firstValue.DrawX);
+                        flagTop = flagPos;
+                        flagHeight = y + scale - flagTop;
+                    }
+                    else
+                    {
+                        flagPos = note.barGroup.firstValue.DrawY + flagHeight + yscale - scale + note.barGroup.slope * (note.DrawX - note.barGroup.firstValue.DrawX);
+                        nextFlagPos = note.barGroup.firstValue.DrawY + flagHeight + yscale - scale + note.barGroup.slope * (nextNote.DrawX - note.barGroup.firstValue.DrawX);
+                        flagTop = y + yscale - scale;
+                        flagHeight = flagPos - flagTop;
+                        
+                    }
+                    
+                    
+                    for(var barNum = 0; barNum < fullBarsCount; barNum++)
+                    {
+                        var barY1 = flagPos + (up?1:-1) * barNum * yscale / 1.5;
+                        var barY2 = barY1 + (up?1:-1) * yscale / 3;
+                        
+                        var barY3 = nextFlagPos + (up?1:-1) * barNum * yscale / 1.5;
+                        var barY4 = barY3 + (up?1:-1) * yscale / 3;
+                        
+                        this.SVG += '<polygon points="' + (x + (up?xscale/2 - scale:-xscale/2)) + ',' + barY1 +' ' + (x + (up?xscale/2 - scale:-xscale/2)) + ',' + barY2 + ' ' + (nextNote.DrawX + (up?xscale/2 - scale:-xscale/2)) + ',' + barY4 + ' ' + (nextNote.DrawX + (up?xscale/2 - scale:-xscale/2)) + ',' + barY3 + '" fill="black" />\n';
+                    }
+                }
             }
-            else
-            {
-                xFlag -= xscale/2;
-                flagTop += yscale - scale;
-            }
-            this.SVG += '<rect x="' + xFlag + '" y="' + flagTop + '" width="' + scale + '" height="' + flagHeight + '" fill="black" />\n';
+            
+            this.SVG += '<rect x="' + (x + (up?xscale/2 - scale:-xscale/2)) + '" y="' + flagTop + '" width="' + scale + '" height="' + flagHeight + '" fill="black" />\n';
             
         }
         return this.SVG;
