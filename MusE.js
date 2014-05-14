@@ -878,42 +878,62 @@ MTime = function()
                         previousNote = note.barGroup.Notes[noteIndex];
                     }
                 }
-                if (noteIndex == note.barGroup.Notes.length - 1)
+                
+                if (noteIndex == note.barGroup.Notes.length - 1 && previousNote == null)
                 {
-                    //last note
-                    if (previousNote == null)
+                    //draw individual flag(s)
+                }
+                else if (previousNote != null && previousNote.Time.BarCount() < note.Time.BarCount() && (noteIndex == note.barGroup.Notes.length - 1 || note.barGroup.Notes[noteIndex + 1].Time.BarCount() < note.Time.BarCount()))
+                {
+                    //draw short stubby flag
+                    var flagPos;
+                    var nextFlagPos;
+                    if (up)
                     {
-                        //draw individual flag(s)
+                        flagPos = note.barGroup.firstValue.DrawY - yscale * 3 + scale + scale + note.barGroup.slope * (note.DrawX - note.barGroup.firstValue.DrawX);
+                        nextFlagPos = note.barGroup.firstValue.DrawY - yscale * 3 + scale + scale + note.barGroup.slope * (x - xscale - note.barGroup.firstValue.DrawX);
+                        flagTop = flagPos;
+                        flagHeight = y + scale - flagTop;
                     }
-                    else if (previousNote.Time.BarCount() < note.Time.BarCount())
+                    else
                     {
-                        //draw short stubby bar
+                        flagPos = note.barGroup.firstValue.DrawY + yscale * 3 + scale + yscale - scale + note.barGroup.slope * (note.DrawX - note.barGroup.firstValue.DrawX);
+                        nextFlagPos = note.barGroup.firstValue.DrawY + yscale * 3 + scale + yscale - scale + note.barGroup.slope * (x - xscale - note.barGroup.firstValue.DrawX);
+                        flagTop = y + yscale - scale;
+                        flagHeight = flagPos - flagTop;
+                    }
+                    for(var barNum = previousNote.Time.BarCount(); barNum < note.Time.BarCount(); barNum++)
+                    {
+                        var barY1 = flagPos + (up?1:-1) * barNum * yscale / 1.5;
+                        var barY2 = barY1 + (up?1:-1) * yscale / 3;
+                        
+                        var barY3 = nextFlagPos + (up?1:-1) * barNum * yscale / 1.5;
+                        var barY4 = barY3 + (up?1:-1) * yscale / 3;
+                        
+                        this.SVG += '<polygon points="' + (x + (up?xscale/2 - scale:-xscale/2)) + ',' + barY1 +' ' + (x + (up?xscale/2 - scale:-xscale/2)) + ',' + barY2 + ' ' + (x - xscale + (up?xscale/2 - scale:-xscale/2)) + ',' + barY4 + ' ' + (x - xscale + (up?xscale/2 - scale:-xscale/2)) + ',' + barY3 + '" fill="black" />\n';
                     }
                 }
-                else
+                if (noteIndex < note.barGroup.Notes.length - 1)
                 {
                     var nextNote = note.barGroup.Notes[noteIndex + 1];
                     var fullBarsCount = Math.min(note.Time.BarCount(), nextNote.Time.BarCount());
                     
                     var flagPos;
                     var nextFlagPos;
-                    
                     if (up)
                     {
-                        flagPos = note.barGroup.firstValue.DrawY - flagHeight + scale + note.barGroup.slope * (note.DrawX - note.barGroup.firstValue.DrawX);
-                        nextFlagPos = note.barGroup.firstValue.DrawY - flagHeight + scale + note.barGroup.slope * (nextNote.DrawX - note.barGroup.firstValue.DrawX);
+                        flagPos = note.barGroup.firstValue.DrawY - yscale * 3 + scale + scale + note.barGroup.slope * (note.DrawX - note.barGroup.firstValue.DrawX);
+                        nextFlagPos = note.barGroup.firstValue.DrawY - yscale * 3 + scale + scale + note.barGroup.slope * (nextNote.DrawX - note.barGroup.firstValue.DrawX);
                         flagTop = flagPos;
                         flagHeight = y + scale - flagTop;
                     }
                     else
                     {
-                        flagPos = note.barGroup.firstValue.DrawY + flagHeight + yscale - scale + note.barGroup.slope * (note.DrawX - note.barGroup.firstValue.DrawX);
-                        nextFlagPos = note.barGroup.firstValue.DrawY + flagHeight + yscale - scale + note.barGroup.slope * (nextNote.DrawX - note.barGroup.firstValue.DrawX);
+                        flagPos = note.barGroup.firstValue.DrawY + yscale * 3 + scale + yscale - scale + note.barGroup.slope * (note.DrawX - note.barGroup.firstValue.DrawX);
+                        nextFlagPos = note.barGroup.firstValue.DrawY + yscale * 3 + scale + yscale - scale + note.barGroup.slope * (nextNote.DrawX - note.barGroup.firstValue.DrawX);
                         flagTop = y + yscale - scale;
                         flagHeight = flagPos - flagTop;
-                        
                     }
-                    
                     
                     for(var barNum = 0; barNum < fullBarsCount; barNum++)
                     {
