@@ -758,7 +758,7 @@ MNote = function(pitches, time)
                 {
                     this.SVG += '<rect x="' + (this.DrawX - xscale * 0.75) + '" y="' + (this.DrawY + yscale * j / 2) + '" width="' + (xscale * 1.5) + '" height="1" fill="black"/>\n';
                 }
-                this.SVG += this.Time.Draw(this, this.DrawX, yPosition, scale, xscale, yscale, up, lastPitchFlipped);
+                this.SVG += this.Time.Draw(this, this.DrawX, yPosition, scale, xscale, yscale, up, lastPitchFlipped, (this.Clef.Pitch.GetValue() - this.Pitches[i].GetValue()) % 2 == 0);
                 if (this.Pitches[i].Mod == 1)
                 {
                     this.SVG += '<g transform="translate(' + (this.DrawX - xscale) + ',' + yPosition + ')"><g transform="scale(' + scale + ',' + scale + ')">' + svgDrawings.Sharp + '</g></g>\n';
@@ -836,7 +836,7 @@ MTime = function()
     {
         return Math.floor(Math.log(this.Values[0])/Math.log(2)) - 2;
     }
-    this.Draw = function(note,x,y,scale,xscale,yscale,up,flip)
+    this.Draw = function(note,x,y,scale,xscale,yscale,up,flip,onLine)
     {
         this.SVG = "";
         
@@ -854,6 +854,10 @@ MTime = function()
             this.SVG += svgDrawings.BlackNoteHead;  
         }
         this.SVG += '</g></g>\n';
+        if (this.Values.length > 1 && this.Values[1] == this.Values[0] * 2)
+        {
+            this.SVG += '<ellipse cx="' + (x + xscale) + '" cy="' + (y + (onLine?0:yscale/2) ) + '" rx="' + (scale * 1.5) + '" ry="' + (scale * 1.5) + '" fill="black"/>\n';
+        }
         if (this.Values[0] > 1)
         {
             var flagHeight = yscale * 3 + scale;
