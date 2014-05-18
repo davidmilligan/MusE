@@ -79,8 +79,8 @@ var svgDrawings =
 }
 svgDrawings.Rests[1] = '<rect x="-5" y="-3.3" width="10" height="4" fill="black"/>';
 svgDrawings.Rests[2] = '<rect x="-5" y="-0.3" width="10" height="4" fill="black"/>';
-svgDrawings.Rests[4] = '';
-svgDrawings.Rests[8] = '<g><path d="M0,14c6.7-19.8,6.9-20,6.9-20c-3,3.8-5,4.4-7.1,3.9c1-0.2,1.1-0.5,1.1-1.5c0-1.1-0.9-1.8-2.2-1.8c-1.3,0-2.2,1.9-1.5,2.9c0.8,1.1,4.1,3.3,9.4-3.4" fill="black" stroke="black"/></g>';
+svgDrawings.Rests[4] = '<g transform="matrix(0.5,0,0,-0.5,128,185)"><path d="M-454,668.3c1.4-1.5,11.9-14.4,11.9-14.4c-8.5-8.3-7.6-15.5,2.1-24.7l-0.8-1c-8.7,3.6-14.2-2.1-6.9-9.1l-0.8-1c-11.4,8.8-11.6,20,1.9,16.1l-11.1,11.5c7.3,7.9,9.6,13.2,2.8,21.9c-0.6,0.8-1.6,1.5-0.9,2C-455.2,670.2-454.8,669.3-454,668.3z" fill="black"/></g>';
+svgDrawings.Rests[8] = '<path d="M0,14c6.7-19.8,6.9-20,6.9-20c-3,3.8-5,4.4-7.1,3.9c1-0.2,1.1-0.5,1.1-1.5c0-1.1-0.9-1.8-2.2-1.8c-1.3,0-2.2,1.9-1.5,2.9c0.8,1.1,4.1,3.3,9.4-3.4" fill="black" stroke="black"/>';
 svgDrawings.Rests[16] = '';
 svgDrawings.Rests[32] = '';
 
