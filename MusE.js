@@ -75,7 +75,14 @@ var svgDrawings =
     ClefWidth: 40,
     NoteHeight: 7,
     NoteWidth: 8,
+    Rests: new Array()
 }
+svgDrawings.Rests[1] = '<rect x="-5" y="-3.3" width="10" height="4" fill="black"/>';
+svgDrawings.Rests[2] = '<rect x="-5" y="-0.3" width="10" height="4" fill="black"/>';
+svgDrawings.Rests[4] = '';
+svgDrawings.Rests[8] = '<g><path d="M0,14c6.7-19.8,6.9-20,6.9-20c-3,3.8-5,4.4-7.1,3.9c1-0.2,1.1-0.5,1.1-1.5c0-1.1-0.9-1.8-2.2-1.8c-1.3,0-2.2,1.9-1.5,2.9c0.8,1.1,4.1,3.3,9.4-3.4" fill="black" stroke="black"/></g>';
+svgDrawings.Rests[16] = '';
+svgDrawings.Rests[32] = '';
 
 
 
@@ -676,6 +683,7 @@ MNote = function(pitches, time)
         this.DrawX = x;
         this.DrawY = y;
         this.Clef = clef;
+        
         for(var i in this.Pitches)
         {
             this.Pitches[i].DrawX = x;
@@ -687,6 +695,19 @@ MNote = function(pitches, time)
         this.SVG = "";
         if (this.Pitches.length > 0)
         {
+            if (this.Pitches[0].GetValue() == Infinity)
+            {
+                //rest
+                this.SVG += '<g transform="translate(' + this.DrawX + ',' + (this.DrawY + yscale * 5 / 2) + ')"><g transform="scale(' + scale + ',' + scale + ')">\n';
+                var time = this.Time.Values[0];
+                if (svgDrawings.Rests[time] != null)
+                {
+                    this.SVG += svgDrawings.Rests[time];
+                }
+                this.SVG += '</g></g>\n';
+
+                return this.SVG;
+            }
             this.Pitches.sort(function(a,b)
             {
                 return a.GetValue() - b.GetValue();
@@ -801,14 +822,24 @@ MPitch = function(name)
     this.Octave = 0;
     this.GetValue = function()
     {
-        return this.Name.charCodeAt(0) - "A".charCodeAt(0) + 7 * (this.Octave + (this.Name.charCodeAt(0) < "C".charCodeAt(0) ? 1 : 0));
+        if (name == '~')
+        {
+            return Infinity;
+        }
+        else
+        {
+            return this.Name.charCodeAt(0) - "A".charCodeAt(0) + 7 * (this.Octave + (this.Name.charCodeAt(0) < "C".charCodeAt(0) ? 1 : 0));
+        }
     };
     this.Transpose = function(x)
     {
-        var newValue = this.GetValue() + x;
-        this.Octave = Math.floor(newValue / 7);
-        this.Name = String.fromCharCode("A".charCodeAt(0) + newValue % 7);
-        this.Octave -= (this.Name.charCodeAt(0) < "C".charCodeAt(0) ? 1 : 0);
+        if (name != '~')
+        {
+            var newValue = this.GetValue() + x;
+            this.Octave = Math.floor(newValue / 7);
+            this.Name = String.fromCharCode("A".charCodeAt(0) + newValue % 7);
+            this.Octave -= (this.Name.charCodeAt(0) < "C".charCodeAt(0) ? 1 : 0);
+        }
     };
     this.Clone = function()
     {
